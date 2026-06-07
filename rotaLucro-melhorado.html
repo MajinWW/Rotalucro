@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA Manifesto Embutido -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"RotaLucro","short_name":"RotaLucro","display":"standalone","background_color":"#000000","theme_color":"#00ff88"}'>
+    <meta name="theme-color" content="#00ff88">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>RotaLucro | Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --card-grad: linear-gradient(145deg, #18181b 0%, #050505 100%);
+            --primary: #00e676;
+            --success: #00ff88;
+            --danger: #ff3b3b;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --text-main: #ffffff;
+            --text-dim: #71717a;
+            --border: #27272a;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            outline: none; 
+        }
+
+        body { 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            margin: 0; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            padding-bottom: 110px; 
+            overflow-x: hidden;
+        }
+
+        /* TOAST NOTIFICATIONS */
+        #toast {
+            position: fixed; 
+            top: -100px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            background: rgba(24, 24, 27, 0.95); 
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--primary); 
+            padding: 16px 24px; 
+            border-radius: 20px;
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            z-index: 9999; 
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            width: 85%; 
+            max-width: 350px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+            font-weight: 600;
+        }
+        #toast.show { top: 30px; }
+        #toast i { font-size: 1.2rem; }
+
+        /* HEADER */
+        header { 
+            padding: 30px 20px 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(10,10,10,1) 0%, rgba(10,10,10,0.5) 100%);
+        }
+        .logo-text { 
+            font-size: 1.4rem; 
+            font-weight: 800; 
+            letter-spacing: -1px; 
+        }
+        .logo-text span { color: var(--primary); }
+        .header-actions { display: flex; gap: 10px; }
+        .btn-icon { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background: var(--surface); 
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-icon:active { 
+            background: var(--primary);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        /* SUMMARY CARDS */
+        .summary-card {
+            margin: 15px 20px 25px; 
+            padding: 25px;
+            background: var(--card-grad); 
+            border-radius: 30px;
+            border: 1px solid var(--border); 
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); 
+            overflow: hidden;
+        }
+        .card-value { 
+            font-size: 2.8rem; 
+            font-weight: 800; 
+            margin: 8px 0; 
+            letter-spacing: -1.5px; 
+        }
+        
+        .goal-container { margin-top: 15px; }
+        .goal-header { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.65rem; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+            font-weight: 700; 
+            margin-bottom: 5px; 
+        }
+        .goal-header span.edit-goal { color: var(--primary); cursor: pointer; }
+        .progress-bg { 
+            width: 100%; 
+            height: 8px; 
+            background: #27272a; 
+            border-radius: 10px; 
+            overflow: hidden; 
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: var(--primary); 
+            width: 0%; 
+            transition: width 0.5s ease; 
+            border-radius: 10px; 
+        }
+
+        .metrics-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-top: 20px; 
+            border-top: 1px solid var(--border); 
+            padding-top: 15px; 
+        }
+        .metric-box { display: flex; flex-direction: column; }
+        .metric-label { 
+            font-size: 0.65rem; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+            font-weight: 700;
+        }
+        .metric-val { 
+            font-size: 1rem; 
+            font-weight: 700; 
+            color: var(--text-main); 
+        }
+
+        /* CHART */
+        .chart-container { 
+            background: var(--surface); 
+            margin: 0 20px 20px; 
+            padding: 20px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border); 
+            height: 250px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+        }
+        
+        /* SECTION HEADER */
+        .section-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 25px; 
+            margin-bottom: 12px; 
+        }
+        .section-title { 
+            font-size: 0.75rem; 
+            color: var(--text-dim); 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            margin: 0;
+        }
+        
+        /* FORMS */
+        .form-block { 
+            background: var(--surface); 
+            margin: 0 20px 15px; 
+            border-radius: 20px; 
+            border: 1px solid var(--border); 
+            overflow: hidden; 
+        }
+        .input-row { 
+            display: flex; 
+            align-items: center; 
+            padding: 16px 20px; 
+            border-bottom: 1px solid var(--border); 
+            flex-wrap: wrap; 
+        }
+        .input-row:last-child { border-bottom: none; }
+        .input-data { 
+            flex: 1; 
+            min-width: 45%; 
+        }
+        .input-data label { 
+            font-size: 0.65rem; 
+            color: var(--text-dim); 
+            font-weight: 600; 
+            display: block; 
+            margin-bottom: 4px; 
+        }
+        .input-data input, 
+        .input-data select { 
+            background: none; 
+            border: none; 
+            color: white; 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            width: 100%; 
+            font-family: inherit; 
+        }
+        .input-data select { 
+            appearance: none; 
+            color: var(--primary); 
+            font-size: 0.9rem; 
+        }
+        .input-data input::placeholder { color: #3f3f46; }
+
+        .chip-group { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+            margin-top: 8px; 
+            width: 100%; 
+        }
+        .chip-label { 
+            background: #18181b; 
+            padding: 8px 14px; 
+            border-radius: 12px; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            color: var(--text-dim); 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            border: 1px solid transparent; 
+        }
+        .chip-input:checked + .chip-label { 
+            background: var(--primary); 
+            color: #000; 
+            border: 1px solid var(--primary); 
+        }
+        .chip-input { display: none; }
+
+        /* BUTTONS */
+        .btn-save { 
+            margin: 15px 20px; 
+            width: calc(100% - 40px); 
+            background: var(--primary); 
+            color: #000; 
+            padding: 20px; 
+            border-radius: 22px; 
+            border: none; 
+            font-size: 1.1rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            transition: transform 0.1s; 
+        }
+        .btn-save:active { transform: scale(0.97); }
+
+        .btn-export { 
+            background: #18181b; 
+            color: white; 
+            border: 1px solid var(--border); 
+            width: calc(100% - 40px); 
+            margin: 10px 20px; 
+            padding: 15px; 
+            border-radius: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        .btn-export:active {
+            background: var(--surface);
+            transform: scale(0.98);
+        }
+
+        .action-grid { 
+            display: flex; 
+            gap: 10px; 
+            margin: 0 20px 20px; 
+        }
+        .btn-half { flex: 1; }
+
+        /* FILTER SELECT */
+        .filtro-select {
+            background: var(--surface);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-weight: 700;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+            margin: 15px 20px 0;
+        }
+
+        /* TRANSACTIONS LIST */
+        #lista-transacoes {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .transacao {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            margin: 8px 20px;
+            padding: 15px 20px;
+            border-radius: 16px;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+        }
+
+        .transacao.ganho {
+            border-left-color: var(--success);
+        }
+
+        .transacao.gasto {
+            border-left-color: var(--danger);
+        }
+
+        .t-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .t-cat {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .t-data {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .t-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .t-valor {
+            font-weight: 700;
+            font-size: 1rem;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .btn-delete {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 59, 59, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .btn-delete:active {
+            background: var(--danger);
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-dim);
+            margin: 40px 20px;
+            font-size: 1.1rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* VIEWS */
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* TAB BAR */
+        .tab-bar { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            height: 85px; 
+            background: rgba(5, 5, 5, 0.95); 
+            backdrop-filter: blur(20px); 
+            border-top: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            padding-bottom: 20px; 
+            z-index: 100; 
+        }
+
+        .nav-item { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 4px; 
+            cursor: pointer; 
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--text-dim);
+            transition: all 0.3s;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .nav-item.active { 
+            color: var(--primary);
+            background: rgba(0, 230, 118, 0.1);
+        }
+
+        .nav-item i { font-size: 1.5rem; }
+
+        /* NEON EFFECTS */
+        .neon-text {
+            color: var(--success);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .neon-red-text {
+            color: var(--danger);
+            text-shadow: 0 0 10px rgba(255, 59, 59, 0.5);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 480px) {
+            .card-value { font-size: 2.2rem; }
+            header { padding: 20px 15px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast"></div>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-text">Rota<span>Lucro</span></div>
+        <div class="header-actions">
+            <button class="btn-icon" onclick="app.gerarRelatorio()" title="Relatório">
+                <i class="fas fa-chart-line"></i>
+            </button>
+            <button class="btn-icon" onclick="document.getElementById('input-importar').click()" title="Importar">
+                <i class="fas fa-upload"></i>
+            </button>
+            <button class="btn-icon" onclick="app.exportarDados()" title="Exportar">
+                <i class="fas fa-download"></i>
+            </button>
+        </div>
+        <input type="file" id="input-importar" style="display:none;" accept=".json" onchange="app.importarDados(this.files[0])">
+    </header>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view active">
+        
+        <!-- Summary Cards -->
+        <div class="summary-card">
+            <span style="color: var(--text-dim); font-size: 0.75rem;">💰 GANHOS</span>
+            <div id="val-ganhos" class="card-value">R$ 0,00</div>
+        </div>
+
+        <div class="summary-card">
+            <span style="color: var(--text-dim); font-size: 0.75rem;">💸 GASTOS</span>
+            <div id="val-gastos" class="card-value">R$ 0,00</div>
+        </div>
+
+        <div class="summary-card">
+            <span style="color: var(--text-dim); font-size: 0.75rem;">✨ LUCRO</span>
+            <div id="val-lucro" class="card-value neon-text">R$ 0,00</div>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-container">
+            <canvas id="meuGrafico"></canvas>
+        </div>
+
+        <!-- Transactions Section -->
+        <div class="section-header">
+            <h2 class="section-title">Últimas Transações</h2>
+        </div>
+
+        <select id="filtro-periodo" class="filtro-select">
+            <option value="todos">📅 Todos os períodos</option>
+            <option value="hoje">📆 Hoje</option>
+            <option value="semana">📊 Esta semana</option>
+            <option value="mes">📈 Este mês</option>
+        </select>
+
+        <ul id="lista-transacoes"></ul>
+
+    </div>
+
+    <!-- GANHOS VIEW -->
+    <div id="view-ganhos" class="view">
+        <div style="padding: 20px 0; text-align: center;">
+            <h2 style="color: var(--primary); margin: 20px 0;">💰 Registrar Corrida</h2>
+        </div>
+
+        <form id="form-ganho" class="form-block">
+            <div class="input-row">
+                <div class="input-data">
+                    <label>Valor da Corrida</label>
+                    <input type="number" id="input-ganho" placeholder="0.00" step="0.01" required>
+                </div>
+            </div>
+        </form>
+
+        <button type="submit" form="form-ganho" class="btn-save">
+            <i class="fas fa-plus"></i> Adicionar Corrida
+        </button>
+    </div>
+
+    <!-- GASTOS VIEW -->
+    <div id="view-gastos" class="view">
+        <div style="padding: 20px 0; text-align: center;">
+            <h2 style="color: var(--danger); margin: 20px 0;">💸 Registrar Gasto</h2>
+        </div>
+
+        <form id="form-gasto" class="form-block">
+            <div class="input-row">
+                <div class="input-data" style="flex: 1;">
+                    <label>Valor do Gasto</label>
+                    <input type="number" id="input-gasto" placeholder="0.00" step="0.01" required>
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="input-data">
+                    <label>Categoria</label>
+                    <select id="categoria-gasto" required>
+                        <option value="">Selecione...</option>
+                        <option value="Combustível">⛽ Combustível</option>
+                        <option value="Manutenção">🔧 Manutenção</option>
+                        <option value="Pedágio">🛣️ Pedágio</option>
+                        <option value="Alimentação">🍔 Alimentação</option>
+                        <option value="Telefone">📱 Telefone</option>
+                        <option value="Seguro">🛡️ Seguro</option>
+                        <option value="Outro">📌 Outro</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <button type="submit" form="form-gasto" class="btn-save">
+            <i class="fas fa-plus"></i> Adicionar Gasto
+        </button>
+    </div>
+
+    <!-- CONFIGURAÇÕES VIEW -->
+    <div id="view-config" class="view">
+        <div style="padding: 20px 0; text-align: center;">
+            <h2 style="margin: 20px 0;">⚙️ Configurações</h2>
+        </div>
+
+        <button class="btn-export" onclick="app.gerarRelatorio()">
+            <i class="fas fa-chart-bar"></i> Gerar Relatório
+        </button>
+
+        <button class="btn-export" onclick="app.exportarDados()">
+            <i class="fas fa-download"></i> Exportar Dados
+        </button>
+
+        <button class="btn-export" onclick="document.getElementById('input-importar-config').click()">
+            <i class="fas fa-upload"></i> Importar Dados
+        </button>
+        <input type="file" id="input-importar-config" style="display:none;" accept=".json" onchange="app.importarDados(this.files[0])">
+
+        <button class="btn-export" style="background: rgba(255,59,59,0.1); border-color: var(--danger); color: var(--danger);" onclick="app.limparDados()">
+            <i class="fas fa-trash-alt"></i> Limpar Todos os Dados
+        </button>
+
+        <div style="padding: 20px; color: var(--text-dim); font-size: 0.85rem; text-align: center; margin-top: 30px;">
+            <p>📱 RotaLucro v2.0</p>
+            <p>Aplicação para controle financeiro de motoristas</p>
+            <p style="margin-top: 20px;">💾 Todos os dados são salvos localmente no seu dispositivo</p>
+        </div>
+    </div>
+
+    <!-- NAVIGATION BAR -->
+    <div class="tab-bar">
+        <a class="nav-item active" data-target="view-dashboard">
+            <i class="fas fa-chart-pie"></i>
+            <span>Painel</span>
+        </a>
+        <a class="nav-item" data-target="view-ganhos">
+            <i class="fas fa-plus-circle"></i>
+            <span>Corridas</span>
+        </a>
+        <a class="nav-item" data-target="view-gastos">
+            <i class="fas fa-minus-circle"></i>
+            <span>Gastos</span>
+        </a>
+        <a class="nav-item" data-target="view-config">
+            <i class="fas fa-cog"></i>
+            <span>Config</span>
+        </a>
+    </div>
+
+    <script src="app-melhorado.js"></script>
+</body>
+</html>

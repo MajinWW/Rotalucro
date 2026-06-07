@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Rota - v2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            background-attachment: fixed;
+        }
+
+        .header {
+            position: absolute;
+            top: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #ffffff;
+            margin: 0 0 8px 0;
+            letter-spacing: -1px;
+        }
+
+        .header h1 span {
+            color: #00e676;
+            text-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+        }
+
+        .header p {
+            color: #71717a;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .botoes-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .botao-central {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: linear-gradient(145deg, #18181b 0%, #050505 100%);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 800;
+            padding: 20px 50px;
+            border-radius: 30px;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid #27272a;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .botao-central::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 230, 118, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .botao-central:hover::before {
+            left: 100%;
+        }
+
+        .botao-central:hover {
+            border-color: #00e676;
+            box-shadow: 0 0 30px rgba(0, 230, 118, 0.3), 0 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .botao-central:active {
+            transform: scale(0.96);
+        }
+
+        .botao-central.lucro {
+            color: #00e676;
+            border-color: #00e676;
+        }
+
+        .botao-central.lucro:hover {
+            background: rgba(0, 230, 118, 0.1);
+        }
+
+        .botao-central.cofre {
+            color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .botao-central.cofre:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .icon {
+            font-size: 1.5rem;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            text-align: center;
+            color: #71717a;
+            font-size: 0.85rem;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        .footer span {
+            color: #00e676;
+        }
+
+        .version-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 230, 118, 0.1);
+            border: 1px solid #00e676;
+            color: #00e676;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .botao-central {
+                padding: 16px 40px;
+                width: 240px;
+                font-size: 1rem;
+            }
+
+            .version-badge {
+                top: 10px;
+                right: 10px;
+                padding: 4px 10px;
+                font-size: 0.65rem;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .botao-central {
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .botao-central:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .botao-central:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="version-badge">v2.0 ✨</div>
+
+    <div class="header">
+        <h1>Rota<span>Lucro</span></h1>
+        <p>Controle seu ganho e seu gasto</p>
+    </div>
+
+    <div class="botoes-container">
+        <!-- RotaLucro - LINK ATUALIZADO -->
+        <a href="rotaLucro-melhorado.html" class="botao-central lucro">
+            <span class="icon">💰</span>
+            <span>RotaLucro</span>
+        </a>
+
+        <!-- RotaCofre - Manter original ou atualizar depois -->
+        <a href="rotaCofre-melhorado.html" class="botao-central cofre">
+            <span class="icon">🏦</span>
+            <span>RotaCofre</span>
+        </a>
+    </div>
+
+    <div class="footer">
+        <p>📱 Aplicação para Motoristas</p>
+        <p>💾 Dados Salvos Localmente</p>
+        <p style="margin-top: 10px; font-size: 0.75rem;">
+            <span>v2.0</span> - Melhorado & Otimizado
+        </p>
+    </div>
+
+</body>
+</html>

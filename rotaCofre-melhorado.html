@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>RotaCofre | Poupança Inteligente</title>
+    <meta name="apple-mobile-web-app-title" content="RotaCofre">
+    <meta name="application-name" content="RotaCofre">
+    <meta name="theme-color" content="#000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --card-grad: linear-gradient(145deg, #18181b 0%, #050505 100%);
+            --primary: #00b09b;
+            --primary-light: #05eb8b;
+            --secondary: #3b82f6;
+            --danger: #ff3b3b;
+            --text-main: #ffffff;
+            --text-dim: #71717a;
+            --border: #27272a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding-bottom: 110px;
+            -webkit-font-smoothing: antialiased;
+            background-image: 
+                radial-gradient(circle at 15% 50px, rgba(0, 176, 155, 0.1), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* TOAST */
+        #toast {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--primary);
+            padding: 16px 24px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 9999;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            width: 85%;
+            max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            font-weight: 600;
+        }
+        #toast.show { top: 30px; }
+
+        /* PAGES */
+        .page { display: none; animation: fadeUp 0.4s ease; }
+        .page.active { display: block; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* HEADER */
+        header {
+            padding: 40px 20px 30px;
+            text-align: center;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(10,10,10,1) 0%, rgba(10,10,10,0.5) 100%);
+        }
+
+        .header-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        .header-title span {
+            color: var(--primary);
+        }
+
+        header h3 {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        #total-cofrinho {
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-icon:active {
+            background: var(--primary);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        .header-progress {
+            margin-top: 25px;
+            padding: 0 10px;
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 30px;
+            height: 12px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 30px;
+            box-shadow: 0 0 15px rgba(0, 176, 155, 0.6);
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .progress-percent {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* DASHBOARD GRID */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dash-card {
+            background: var(--card-grad);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s;
+        }
+
+        .dash-card:hover {
+            border-color: var(--primary);
+        }
+
+        .dash-card h3 {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .dash-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .text-primary { color: var(--primary); }
+        .text-secondary { color: var(--secondary); }
+        .text-danger { color: var(--danger); }
+
+        /* CONTAINER */
+        .container {
+            padding: 10px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            margin: 10px 0 20px 20px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--card-grad);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s;
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        /* INPUTS */
+        .input-premium {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            color: var(--primary);
+            border-radius: 0;
+            font-size: 2.8rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 10px 0 15px 0;
+            margin: 15px 0 25px 0;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .input-premium:focus {
+            border-bottom: 2px solid var(--primary);
+            box-shadow: 0 10px 20px -10px rgba(0, 176, 155, 0.3);
+        }
+
+        .input-premium::placeholder {
+            color: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+
+        .input-normal {
+            width: 100%;
+            padding: 18px;
+            margin-bottom: 15px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 16px;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .input-normal:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 176, 155, 0.1);
+        }
+
+        .input-normal::placeholder {
+            color: var(--text-dim);
+            font-weight: 300;
+        }
+
+        /* BUTTONS */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn-quick {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 12px 20px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-grow: 1;
+            text-align: center;
+            max-width: 120px;
+        }
+
+        .btn-quick:active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: #000;
+            transform: scale(0.95);
+            border-color: transparent;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #000;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.96);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-export {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid var(--border);
+            width: calc(100% - 0px);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-export:active {
+            background: rgba(0, 176, 155, 0.1);
+            border-color: var(--primary);
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .btn-danger:active {
+            background: rgba(255, 59, 59, 0.1);
+        }
+
+        /* DEPOSIT LIST */
+        .deposit-list {
+            list-style: none;
+        }
+
+        .deposit-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .deposit-item:last-child {
+            border-bottom: none;
+        }
+
+        .d-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .d-label {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-main);
+        }
+
+        .d-date {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .d-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .d-val {
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.2rem;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .btn-delete {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 59, 59, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:active {
+            background: var(--danger);
+            color: white;
+            transform: scale(0.95);
+        }
+
+        /* SIMULATION RESULTS */
+        #resultado-simulacao {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .result-item {
+            background: rgba(0, 176, 155, 0.1);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .result-label {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            color: var(--text-main);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            padding: 30px 25px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 350px;
+            border: 1px solid var(--border);
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .modal-content p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .btn-cancel {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:active {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(0.98);
+        }
+
+        /* NAVIGATION */
+        .bottom-nav {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 380px;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 10px;
+            z-index: 1000;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 33%;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item i {
+            font-size: 1.3rem;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active i {
+            color: var(--primary);
+            filter: drop-shadow(0 0 5px rgba(0, 176, 155, 0.5));
+            transform: translateY(-2px);
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-dim);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 480px) {
+            #total-cofrinho {
+                font-size: 2.5rem;
+            }
+
+            .page-title {
+                font-size: 1.4rem;
+            }
+
+            .input-premium {
+                font-size: 2rem;
+            }
+
+            header {
+                padding: 30px 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast">
+        <span id="toast-msg">Operação realizada!</span>
+    </div>
+
+    <!-- HOME PAGE -->
+    <div id="page-home" class="page active">
+        <header>
+            <div class="header-actions">
+                <button class="btn-icon" onclick="app.gerarRelatorio()" title="Relatório">
+                    <i class="fas fa-chart-bar"></i>
+                </button>
+                <button class="btn-icon" onclick="document.getElementById('input-importar').click()" title="Importar">
+                    <i class="fas fa-upload"></i>
+                </button>
+                <button class="btn-icon" onclick="app.exportarDados()" title="Exportar">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn-icon" onclick="app.abrirModalMeta()" title="Definir Meta">
+                    <i class="fas fa-bullseye"></i>
+                </button>
+            </div>
+
+            <div class="header-title">Rota<span>Cofre</span></div>
+            <h3>Patrimônio Acumulado</h3>
+            <div id="total-cofrinho">R$ 0,00</div>
+
+            <div class="header-progress">
+                <div class="progress-container">
+                    <div class="progress-bar" id="barra-progresso"></div>
+                </div>
+                <div class="progress-info">
+                    <span class="progress-percent" id="texto-progresso">0%</span>
+                    <span>Meta: <strong id="texto-meta-header">R$ 0,00</strong></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <h3>Objetivo Total</h3>
+                <div class="dash-value text-secondary" id="valor-meta">R$ 0,00</div>
+            </div>
+            <div class="dash-card">
+                <h3>Falta Investir</h3>
+                <div class="dash-value text-danger" id="valor-restante">R$ 0,00</div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <div class="card-label">💰 Novo Aporte</div>
+                <input type="number" id="valor-ganho" class="input-premium" placeholder="0,00" step="0.01" inputmode="decimal">
+
+                <div class="quick-actions">
+                    <button class="btn-quick" onclick="app.setValorAporte(50)">+ R$ 50</button>
+                    <button class="btn-quick" onclick="app.setValorAporte(100)">+ R$ 100</button>
+                    <button class="btn-quick" onclick="app.setValorAporte(200)">+ R$ 200</button>
+                </div>
+
+                <button class="btn-primary" onclick="app.adicionarAporte(document.getElementById('valor-ganho').value)">
+                    <i class="fas fa-plus"></i> Confirmar Aporte
+                </button>
+            </div>
+        </div>
+
+        <input type="file" id="input-importar" style="display:none;" accept=".json" onchange="app.importarDados(this.files[0])">
+    </div>
+
+    <!-- SIMULADOR PAGE -->
+    <div id="page-simulador" class="page">
+        <header style="padding-top: 30px; padding-bottom: 10px; text-align: left; border: none;">
+            <h1 class="page-title">Projeção de<br>Rendimentos</h1>
+        </header>
+
+        <div class="container">
+            <div class="card">
+                <p style="font-size: 0.9rem; margin-bottom: 20px; color: var(--text-dim); line-height: 1.6;">
+                    Simule o poder dos juros compostos com base na taxa Selic (~10.5% a.a.). Insira o aporte diário desejado.
+                </p>
+                <input type="number" id="aporte-diario-simulado" class="input-normal" placeholder="Aporte Diário (R$)" step="0.01" inputmode="decimal">
+                <button class="btn-primary btn-secondary" onclick="app.simularJuros()">
+                    <i class="fas fa-calculator"></i> Calcular Juros
+                </button>
+                <div id="resultado-simulacao" style="margin-top: 20px; display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTÓRICO PAGE -->
+    <div id="page-historico" class="page">
+        <header style="padding-top: 30px; padding-bottom: 10px; text-align: left; border: none;">
+            <h1 class="page-title">Extrato do<br>RotaCofre</h1>
+        </header>
+
+        <div class="container">
+            <div class="card">
+                <ul class="deposit-list" id="lista-depositos"></ul>
+            </div>
+
+            <!-- Configurações -->
+            <div class="card" style="margin-top: 30px; padding: 20px;">
+                <h3 style="margin-bottom: 20px; font-size: 1.1rem;">⚙️ Opções</h3>
+
+                <button class="btn-export" onclick="app.exportarDados()">
+                    <i class="fas fa-download"></i> Exportar Dados
+                </button>
+
+                <button class="btn-export" onclick="document.getElementById('input-importar-config').click()">
+                    <i class="fas fa-upload"></i> Importar Dados
+                </button>
+
+                <button class="btn-export btn-danger" onclick="app.limparDados()">
+                    <i class="fas fa-trash-alt"></i> Limpar Tudo
+                </button>
+
+                <div style="padding: 20px 0; color: var(--text-dim); font-size: 0.85rem; text-align: center;">
+                    <p>📱 RotaCofre v2.0</p>
+                    <p>Poupança inteligente para motoristas</p>
+                </div>
+            </div>
+
+            <input type="file" id="input-importar-config" style="display:none;" accept=".json" onchange="app.importarDados(this.files[0])">
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-page="home" onclick="app.mudarPagina('home')">
+            <i class="fas fa-home"></i>
+            <span>Início</span>
+        </button>
+        <button class="nav-item" data-page="simulador" onclick="app.mudarPagina('simulador')">
+            <i class="fas fa-chart-line"></i>
+            <span>Simulador</span>
+        </button>
+        <button class="nav-item" data-page="historico" onclick="app.mudarPagina('historico')">
+            <i class="fas fa-receipt"></i>
+            <span>Extrato</span>
+        </button>
+    </nav>
+
+    <!-- MODAL META -->
+    <div class="modal-overlay" id="modal-meta">
+        <div class="modal-content">
+            <h2>🎯 Definir Alvo</h2>
+            <p>Qual é o valor financeiro que você deseja atingir no RotaCofre?</p>
+            <input type="number" id="input-meta" class="input-normal" placeholder="Ex: 50000" step="0.01" inputmode="decimal">
+            <button class="btn-primary" onclick="app.definirMeta(document.getElementById('input-meta').value)">
+                Confirmar Meta
+            </button>
+            <button class="btn-cancel" onclick="app.fecharModalMeta()">Cancelar</button>
+        </div>
+    </div>
+
+    <script src="rotaCofre-melhorado.js"></script>
+</body>
+</html>
